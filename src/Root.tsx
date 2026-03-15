@@ -6,7 +6,7 @@ export const RemotionRoot = () => {
     <Composition
       id="WE2FLYVideo"
       component={WE2FLYVideo}
-      durationInFrames={926}
+      durationInFrames={910}
       fps={30}
       width={1920}
       height={1080}
