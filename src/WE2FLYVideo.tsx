@@ -1,16 +1,17 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import { Video, Audio } from "@remotion/media";
+import { TransitionSeries } from "@remotion/transitions";
 import {
-  TransitionSeries,
-  linearTiming,
-  springTiming,
-} from "@remotion/transitions";
-import { fade } from "@remotion/transitions/fade";
-import { wipe } from "@remotion/transitions/wipe";
-import { slide } from "@remotion/transitions/slide";
-import { flip } from "@remotion/transitions/flip";
-import { LightLeak } from "@remotion/light-leaks";
+  NeonGlitchOverlay,
+  NeonWhiteFlashOverlay,
+  LightLeakSweep,
+  ColorBurnOverlay,
+  ZoomOutWipe,
+  ZoomPunchIn,
+  FadeFromBlack,
+  IrisCloseOverlay,
+} from "./transitions";
 
 const AUDIO_URL =
   "https://drive.google.com/uc?export=download&id=1D2YNXZfc56xwACUw_bHvfFfVrVIiSitH";
@@ -56,10 +57,6 @@ const CLIPS: ClipData[] = [
     bgColor: "#1a0e00",
   },
 ];
-
-const BlackScreen: React.FC = () => (
-  <AbsoluteFill style={{ backgroundColor: "#000000" }} />
-);
 
 const ClipSegment: React.FC<{ clip: ClipData }> = ({ clip }) => {
   const frame = useCurrentFrame();
@@ -120,97 +117,69 @@ export const WE2FLYVideo: React.FC = () => {
       <AudioTrack />
 
       <TransitionSeries>
-        {/* Fade in from black */}
-        <TransitionSeries.Sequence durationInFrames={15}>
-          <BlackScreen />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: 15 })}
-        />
-
-        {/* Clip 1 — Studio */}
+        {/* ── Clip 1 — Studio (fade in from black) ── */}
         <TransitionSeries.Sequence durationInFrames={CLIP_DURATION}>
           <ClipSegment clip={CLIPS[0]} />
+          <FadeFromBlack durationFrames={15} />
         </TransitionSeries.Sequence>
 
-        {/* Wipe: Studio 1 → Studio 2 */}
-        <TransitionSeries.Transition
-          presentation={wipe()}
-          timing={springTiming({
-            config: { damping: 200 },
-            durationInFrames: 10,
-          })}
-        />
+        {/* T1: Neon Glitch Cut (Studio 1 → Studio 2) */}
+        <TransitionSeries.Overlay durationInFrames={8}>
+          <NeonGlitchOverlay />
+        </TransitionSeries.Overlay>
 
-        {/* Clip 2 — Studio */}
+        {/* ── Clip 2 — Studio ── */}
         <TransitionSeries.Sequence durationInFrames={CLIP_DURATION}>
           <ClipSegment clip={CLIPS[1]} />
         </TransitionSeries.Sequence>
 
-        {/* Light leak: Studio → Apartment (warm amber) */}
-        <TransitionSeries.Overlay durationInFrames={30}>
-          <LightLeak seed={1} hueShift={30} />
+        {/* T2: Neon White Flash (Studio → Apartment scene change) */}
+        <TransitionSeries.Overlay durationInFrames={24}>
+          <NeonWhiteFlashOverlay />
         </TransitionSeries.Overlay>
 
-        {/* Clip 3 — Apartment */}
+        {/* ── Clip 3 — Apartment ── */}
         <TransitionSeries.Sequence durationInFrames={CLIP_DURATION}>
           <ClipSegment clip={CLIPS[2]} />
         </TransitionSeries.Sequence>
 
-        {/* Slide up: Apartment 1 → Apartment 2 */}
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-bottom" })}
-          timing={linearTiming({ durationInFrames: 12 })}
-        />
-
-        {/* Clip 4 — Apartment */}
-        <TransitionSeries.Sequence durationInFrames={CLIP_DURATION}>
-          <ClipSegment clip={CLIPS[3]} />
-        </TransitionSeries.Sequence>
-
-        {/* Light leak: Apartment → Beach (cool blue) */}
-        <TransitionSeries.Overlay durationInFrames={30}>
-          <LightLeak seed={3} hueShift={200} />
+        {/* T3: Light Leak Sweep (Apartment 1 → Apartment 2) */}
+        <TransitionSeries.Overlay durationInFrames={12}>
+          <LightLeakSweep />
         </TransitionSeries.Overlay>
 
-        {/* Clip 5 — Beach */}
+        {/* ── Clip 4 — Apartment (zoom-out wipe at end) ── */}
+        <TransitionSeries.Sequence durationInFrames={CLIP_DURATION}>
+          <ZoomOutWipe activateFrame={120} durationFrames={30}>
+            <ClipSegment clip={CLIPS[3]} />
+          </ZoomOutWipe>
+        </TransitionSeries.Sequence>
+
+        {/* Hard cut — ZoomOutWipe handles the visual exit */}
+
+        {/* ── Clip 5 — Beach ── */}
         <TransitionSeries.Sequence durationInFrames={CLIP_DURATION}>
           <ClipSegment clip={CLIPS[4]} />
         </TransitionSeries.Sequence>
 
-        {/* Slide left: Beach 1 → Beach 2 */}
-        <TransitionSeries.Transition
-          presentation={slide({ direction: "from-left" })}
-          timing={linearTiming({ durationInFrames: 12 })}
-        />
+        {/* T5: Color Burn (Beach 1 → Beach 2) */}
+        <TransitionSeries.Overlay durationInFrames={12}>
+          <ColorBurnOverlay />
+        </TransitionSeries.Overlay>
 
-        {/* Clip 6 — Beach */}
+        {/* ── Clip 6 — Beach ── */}
         <TransitionSeries.Sequence durationInFrames={CLIP_DURATION}>
           <ClipSegment clip={CLIPS[5]} />
         </TransitionSeries.Sequence>
 
-        {/* Flip: Beach 2 → Beach 3 */}
-        <TransitionSeries.Transition
-          presentation={flip()}
-          timing={springTiming({
-            config: { damping: 200 },
-            durationInFrames: 10,
-          })}
-        />
+        {/* Hard cut — ZoomPunchIn handles the visual entry */}
 
-        {/* Clip 7 — Beach */}
+        {/* ── Clip 7 — Beach (zoom punch in + iris close) ── */}
         <TransitionSeries.Sequence durationInFrames={CLIP_DURATION}>
-          <ClipSegment clip={CLIPS[6]} />
-        </TransitionSeries.Sequence>
-
-        {/* Fade out to black */}
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: 15 })}
-        />
-        <TransitionSeries.Sequence durationInFrames={15}>
-          <BlackScreen />
+          <ZoomPunchIn durationFrames={12}>
+            <ClipSegment clip={CLIPS[6]} />
+          </ZoomPunchIn>
+          <IrisCloseOverlay activateFrame={120} durationFrames={30} />
         </TransitionSeries.Sequence>
       </TransitionSeries>
     </AbsoluteFill>
