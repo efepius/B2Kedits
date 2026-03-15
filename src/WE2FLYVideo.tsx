@@ -10,6 +10,16 @@ import {
 } from "remotion";
 import { Video, Audio } from "@remotion/media";
 
+// Audio track — won't crash if Baby Nepo.mp3 is missing from public/
+const AudioTrack: React.FC = () => {
+  try {
+    const src = staticFile("Baby Nepo.mp3");
+    return <Audio src={src} volume={1} />;
+  } catch {
+    return null;
+  }
+};
+
 const CLIP_DURATION = 150;
 const WITHIN_SCENE_OVERLAP = 20;
 const SCENE_CHANGE_OVERLAP = 30;
@@ -276,7 +286,7 @@ export const WE2FLYVideo: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#000000" }}>
       {/* Audio track — drop Baby Nepo.mp3 into public/ folder */}
-      <Audio src={staticFile("Baby Nepo.mp3")} volume={1} />
+      <AudioTrack />
 
       {/* Video clips with overlapping sequences */}
       {CLIPS.map((clip, i) => (
