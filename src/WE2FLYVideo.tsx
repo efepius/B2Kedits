@@ -9,7 +9,6 @@ import {
 import { fade } from "@remotion/transitions/fade";
 import { wipe } from "@remotion/transitions/wipe";
 import { slide } from "@remotion/transitions/slide";
-import { clockWipe } from "@remotion/transitions/clock-wipe";
 import { flip } from "@remotion/transitions/flip";
 import { LightLeak } from "@remotion/light-leaks";
 
@@ -180,9 +179,9 @@ export const WE2FLYVideo: React.FC = () => {
           <ClipSegment clip={CLIPS[4]} />
         </TransitionSeries.Sequence>
 
-        {/* Clock wipe: Beach 1 → Beach 2 */}
+        {/* Slide left: Beach 1 → Beach 2 */}
         <TransitionSeries.Transition
-          presentation={clockWipe()}
+          presentation={slide({ direction: "from-left" })}
           timing={linearTiming({ durationInFrames: 12 })}
         />
 
