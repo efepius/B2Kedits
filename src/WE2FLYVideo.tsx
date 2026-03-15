@@ -10,14 +10,11 @@ import {
 } from "remotion";
 import { Video, Audio } from "@remotion/media";
 
-// Audio track — won't crash if Baby Nepo.mp3 is missing from public/
+const AUDIO_URL =
+  "https://drive.google.com/uc?export=download&id=1D2YNXZfc56xwACUw_bHvfFfVrVIiSitH";
+
 const AudioTrack: React.FC = () => {
-  try {
-    const src = staticFile("Baby Nepo.mp3");
-    return <Audio src={src} volume={1} />;
-  } catch {
-    return null;
-  }
+  return <Audio src={AUDIO_URL} volume={1} />;
 };
 
 const CLIP_DURATION = 150;
