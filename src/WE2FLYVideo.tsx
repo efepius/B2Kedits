@@ -1,14 +1,18 @@
 import React from "react";
-import {
-  AbsoluteFill,
-  Sequence,
-  useCurrentFrame,
-  interpolate,
-} from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate, Easing } from "remotion";
 import { Video } from "@remotion/media";
+import {
+  TransitionSeries,
+  linearTiming,
+  springTiming,
+} from "@remotion/transitions";
+import { fade } from "@remotion/transitions/fade";
+import { slide } from "@remotion/transitions/slide";
+import { wipe } from "@remotion/transitions/wipe";
+import { clockWipe } from "@remotion/transitions/clock-wipe";
+import { flip } from "@remotion/transitions/flip";
 
 const CLIP_DURATION = 150; // 5 seconds at 30fps
-const FADE_FRAMES = 12;
 const LABEL_FADE_IN = 20;
 const LABEL_FADE_OUT_START = 130;
 
@@ -56,24 +60,43 @@ const CLIPS: ClipData[] = [
   },
 ];
 
+// Transition definitions between each pair of clips
+// Within-scene: subtle. Scene-to-scene: dramatic.
+const TRANSITIONS = [
+  // Studio 1 → Studio 2: gentle crossfade
+  {
+    presentation: fade(),
+    timing: linearTiming({ durationInFrames: 20, easing: Easing.inOut(Easing.quad) }),
+  },
+  // Studio 2 → Apartment 1: dramatic slide (scene change)
+  {
+    presentation: slide({ direction: "from-left" }),
+    timing: springTiming({ config: { damping: 200 }, durationInFrames: 24 }),
+  },
+  // Apartment 1 → Apartment 2: smooth wipe
+  {
+    presentation: wipe({ direction: "from-left" }),
+    timing: linearTiming({ durationInFrames: 18, easing: Easing.inOut(Easing.sin) }),
+  },
+  // Apartment 2 → Beach 1: clock wipe (scene change)
+  {
+    presentation: clockWipe(),
+    timing: springTiming({ config: { damping: 200 }, durationInFrames: 24 }),
+  },
+  // Beach 1 → Beach 2: soft crossfade
+  {
+    presentation: fade(),
+    timing: linearTiming({ durationInFrames: 18, easing: Easing.inOut(Easing.sin) }),
+  },
+  // Beach 2 → Beach 3: flip for final punch
+  {
+    presentation: flip(),
+    timing: springTiming({ config: { damping: 200 }, durationInFrames: 20 }),
+  },
+];
+
 const ClipSegment: React.FC<{ clip: ClipData }> = ({ clip }) => {
   const frame = useCurrentFrame();
-
-  // Fade in/out opacity
-  const fadeIn = interpolate(frame, [0, FADE_FRAMES], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const fadeOut = interpolate(
-    frame,
-    [CLIP_DURATION - FADE_FRAMES, CLIP_DURATION],
-    [1, 0],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    }
-  );
-  const opacity = Math.min(fadeIn, fadeOut);
 
   // Ken Burns: scale from 1.04 to 1.0
   const scale = interpolate(frame, [0, CLIP_DURATION], [1.04, 1.0], {
@@ -102,10 +125,9 @@ const ClipSegment: React.FC<{ clip: ClipData }> = ({ clip }) => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: clip.bgColor }}>
-      {/* Video with Ken Burns zoom and fade */}
+      {/* Video with Ken Burns zoom */}
       <AbsoluteFill
         style={{
-          opacity,
           transform: `scale(${scale})`,
           overflow: "hidden",
         }}
@@ -162,17 +184,30 @@ const ClipSegment: React.FC<{ clip: ClipData }> = ({ clip }) => {
 };
 
 export const WE2FLYVideo: React.FC = () => {
+  // Build TransitionSeries children: clip, transition, clip, transition, ...
+  const elements: React.ReactNode[] = [];
+
+  CLIPS.forEach((clip, i) => {
+    elements.push(
+      <TransitionSeries.Sequence key={`clip-${i}`} durationInFrames={CLIP_DURATION}>
+        <ClipSegment clip={clip} />
+      </TransitionSeries.Sequence>
+    );
+
+    if (i < TRANSITIONS.length) {
+      elements.push(
+        <TransitionSeries.Transition
+          key={`transition-${i}`}
+          presentation={TRANSITIONS[i].presentation}
+          timing={TRANSITIONS[i].timing}
+        />
+      );
+    }
+  });
+
   return (
     <AbsoluteFill style={{ backgroundColor: "#000000" }}>
-      {CLIPS.map((clip, i) => (
-        <Sequence
-          key={i}
-          from={i * CLIP_DURATION}
-          durationInFrames={CLIP_DURATION}
-        >
-          <ClipSegment clip={clip} />
-        </Sequence>
-      ))}
+      <TransitionSeries>{elements}</TransitionSeries>
     </AbsoluteFill>
   );
 };
