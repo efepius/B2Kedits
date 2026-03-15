@@ -92,7 +92,7 @@ export const LightLeakSweep: React.FC = () => {
   const frame = useCurrentFrame();
   const duration = 12;
   const progress = interpolate(frame, [0, duration], [0, 1], {
-    easing: Easing.inOut(Easing.sine),
+    easing: Easing.inOut(Easing.sin),
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
